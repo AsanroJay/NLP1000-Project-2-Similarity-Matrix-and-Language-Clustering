@@ -92,3 +92,51 @@ def compile_per_language(cleaned_dir, output_dir="MCO1_Compiled"):
         print(f"Compiled {lang} → {output_file} ({len(compiled_texts)} files merged)")
 
     print(f"\nAll languages compiled to: {output_dir}")
+
+
+def load_ngp_file(file_path):
+    """Loads an NGP file and returns a dictionary of ngram → frequency."""
+    profile = {}
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) == 2:
+                ngram, freq = parts
+                try:
+                    profile[ngram] = float(freq)
+                except ValueError:
+                    continue
+    return profile
+
+
+def build_ngp_vectors(ngp_dir):
+    """
+    Loads all NGP files in a directory and returns:
+      - langs: list of language names
+      - vectors: list of frequency vectors (aligned by ngram vocabulary)
+    """
+    profiles = {}
+    for filename in os.listdir(ngp_dir):
+        if filename.endswith(".ngp"):
+            lang = os.path.splitext(filename)[0]
+            profiles[lang] = load_ngp_file(os.path.join(ngp_dir, filename))
+
+    # Create shared n-gram vocabulary
+    all_ngrams = sorted(set(ngram for profile in profiles.values() for ngram in profile))
+
+    vectors = []
+    for lang in profiles:
+        vector = [profiles[lang].get(ngram, 0.0) for ngram in all_ngrams]
+        vectors.append(vector)
+
+    langs = list(profiles.keys())
+    return langs, vectors
+
+def compute_cosine_similarity_table(ngp_dir):
+    """
+    Computes and returns a DataFrame of cosine similarities between languages.
+    """
+    langs, vectors = build_ngp_vectors(ngp_dir)
+    sim_matrix = cosine_similarity(vectors)
+    df_sim = pd.DataFrame(sim_matrix, index=langs, columns=langs)
+    return df_sim
