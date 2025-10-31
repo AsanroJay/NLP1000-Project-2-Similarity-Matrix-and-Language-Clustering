@@ -1,6 +1,15 @@
 import os
 import re
 import unicodedata
+import pandas as pd
+import numpy as np
+import glob
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.cluster.hierarchy import linkage, dendrogram
+from scipy.spatial.distance import squareform
+
 
 def clean_text(text):
     """Remove non-letter characters and normalize."""
