@@ -2,10 +2,7 @@ import os
 import re
 import unicodedata
 import pandas as pd
-import numpy as np
-import glob
 import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.cluster.hierarchy import linkage, dendrogram
 from scipy.spatial.distance import squareform
@@ -140,3 +137,36 @@ def compute_cosine_similarity_table(ngp_dir):
     sim_matrix = cosine_similarity(vectors)
     df_sim = pd.DataFrame(sim_matrix, index=langs, columns=langs)
     return df_sim
+
+
+def plot_language_dendrogram(similarity_df, method="average", save_path=None):
+    """
+    Performs hierarchical clustering using cosine similarity and plots a dendrogram.
+
+    Parameters:
+        similarity_df (pd.DataFrame): Cosine similarity matrix (languages × languages)
+        method (str): Linkage method ('average', 'ward', 'complete', etc.)
+        save_path (str, optional): File path to save dendrogram image (e.g. 'output/dendrogram.png')
+    """
+    # Convert similarity → distance
+    distance_matrix = 1 - similarity_df.values
+    condensed_distance = squareform(distance_matrix, checks=False)
+
+    # Perform hierarchical clustering
+    linkage_matrix = linkage(condensed_distance, method=method)
+
+    # Plot dendrogram
+    plt.figure(figsize=(10, 6))
+    dendrogram(linkage_matrix, labels=similarity_df.index, leaf_rotation=45, leaf_font_size=10)
+    plt.title(f"Hierarchical Clustering of Languages ({method.title()} Linkage, Cosine Distance)")
+    plt.xlabel("Languages")
+    plt.ylabel("Distance")
+    plt.tight_layout()
+
+    # Save or display
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Dendrogram saved to {save_path}")
+    else:
+        plt.show()
