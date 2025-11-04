@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.cluster.hierarchy import linkage, dendrogram
 from scipy.spatial.distance import squareform
+import seaborn as sns
 
 
 def clean_text(text):
@@ -138,6 +139,26 @@ def compute_cosine_similarity_table(ngp_dir):
     df_sim = pd.DataFrame(sim_matrix, index=langs, columns=langs)
     return df_sim
 
+def draw_heat_map(df_sim, title="Cosine Similarity Heatmap"):
+    """
+    Draws a heatmap for the cosine similarity DataFrame.
+    Green = high similarity, Orange = medium, Red = low.
+    """
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        df_sim,
+        annot=True,
+        fmt=".3f",
+        cmap="RdYlGn",  # Red → Yellow → Green 
+        linecolor="gray",
+        cbar_kws={'label': 'Cosine Similarity'}
+    )
+    plt.title(title, fontsize=14, pad=12)
+    plt.xlabel("Languages")
+    plt.ylabel("Languages")
+    plt.tight_layout()
+    plt.show()
+
 
 def plot_language_dendrogram(similarity_df, method="average", save_path=None):
     """
@@ -148,7 +169,7 @@ def plot_language_dendrogram(similarity_df, method="average", save_path=None):
         method (str): Linkage method ('average', 'ward', 'complete', etc.)
         save_path (str, optional): File path to save dendrogram image (e.g. 'output/dendrogram.png')
     """
-    # Convert similarity → distance
+    # Convert similarity to distance
     distance_matrix = 1 - similarity_df.values
     condensed_distance = squareform(distance_matrix, checks=False)
 
